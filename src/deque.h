@@ -174,7 +174,8 @@ bool type##_deque_insert_head(type##_deque_s *const restrict deque, const type v
    if (type##_deque_full(deque) && !type##_deque_resize(deque)) \
       return false; \
    deque->len++; \
-   deque->head = (deque->head + deque->size - 1) % deque->size; \
+   /* deque->head = (deque->head + deque->size - 1) % deque->size; */ \
+   deque->head = (deque->head + deque->size - 1) & (deque->size - 1); \
    deque->values[deque->head] = value; \
    return true; \
 } \
@@ -185,7 +186,8 @@ bool type##_deque_insert_tail(type##_deque_s *const restrict deque, const type v
    assert(validate_value_fn(value)); \
    if (type##_deque_full(deque) && !type##_deque_resize(deque)) \
       return false; \
-   deque->values[(deque->head + deque->len) % deque->size] = value; \
+   /* deque->values[(deque->head + deque->len) % deque->size] = value; */ \
+   deque->values[(deque->head + deque->len) & (deque->size - 1)] = value; \
    deque->len++; \
    return true; \
 } \
@@ -195,7 +197,8 @@ bool type##_deque_remove_head(type##_deque_s *const restrict deque) \
    assert(deque); \
    if (type##_deque_empty(deque)) \
       return false; \
-   deque->head = (deque->head + 1) % deque->size; \
+   /* deque->head = (deque->head + 1) % deque->size; */ \
+   deque->head = (deque->head + 1) & (deque->size - 1); \
    deque->len--; \
    return true; \
 } \
@@ -220,7 +223,8 @@ type type##_deque_peek_tail(const type##_deque_s *const restrict deque) \
 { \
    assert(deque); \
    assert(!type##_deque_empty(deque)); \
-   return deque->values[(deque->head + deque->len - 1) % deque->size]; \
+   /* return deque->values[(deque->head + deque->len - 1) % deque->size]; */ \
+   return deque->values[(deque->head + deque->len - 1) & (deque->size - 1)]; \
 }
 
 
