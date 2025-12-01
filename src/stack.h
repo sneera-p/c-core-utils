@@ -90,7 +90,7 @@ void type##_stack_reverse(type##_stack_s *const restrict);
    static_assert(init_size != 0 && (init_size & (init_size - 1)) == 0, "Warning: init_size must be a power of 2"); /* resize optimization */ \
    static_assert(growth_factor > 1, "Warning: growth_factor too small"); \
    static_assert(growth_factor < 32,  "Warning: growth_factor too big"); \
-   static_assert(growth_factor != 0 && (init_size & (init_size - 1)) == 0, "Warning: init_size must be a power of 2"); /* resize optimization */ \
+   static_assert(growth_factor != 0 && (growth_factor & (growth_factor - 1)) == 0, "Warning: growth_factor must be a power of 2"); /* resize optimization */ \
    assert_istype(type); \
    assert_istype(len_type); \
    assert_type(validate_value_fn((type){0}), bool); \
