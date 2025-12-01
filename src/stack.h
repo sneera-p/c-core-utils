@@ -206,6 +206,26 @@ void type##_stack_reverse(type##_stack_s *const restrict stack) \
 
 
 /**
+ * typecheck_stack_ptr macro
+ * --------------------------
+ * Compile-time validation that 'var' is a pointer to a stack of 'type'.
+ *
+ * Usage:
+ *   typecheck_stack_ptr(var, type, expr);
+ *
+ * Ensures that 'var' is either a pointer to 'type##_stack_s' or
+ * 'const type##_stack_s'. Useful for generic stack macros to produce
+ * clear compile-time errors if a non-stack pointer is passed.
+ *
+ * Behavior:
+ *   - C11+: uses typecheck_ptr with _Generic for compile-time checking.
+ *   - C99 fallback: simply evaluates 'expr' (no type enforcement).
+ */
+#define typecheck_stack_ptr(var, type, expr) \
+   typecheck_ptr(var, type##_stack_s, expr)
+
+
+/**
  * Stack function macros
  * --------------------
  * Provides type-generic macros for stack operations.
@@ -223,34 +243,54 @@ void type##_stack_reverse(type##_stack_s *const restrict stack) \
  *   stack_delete(int, &s);             // Free any heap memory
  */
 #define stack_init(type, stack) \
-   type##_stack_init((stack))
+   typecheck_stack_ptr(stack, type, \
+      type##_stack_init((stack)) \
+   )
 
 #define stack_resize(type, stack) \
-   type##_stack_resize((stack))
+   typecheck_stack_ptr(stack, type, \
+      type##_stack_resize((stack)) \
+   )
 
 #define stack_clear(type, stack) \
-   type##_stack_clear((stack))
+   typecheck_stack_ptr(stack, type, \
+      type##_stack_clear((stack)) \
+   )
 
 #define stack_delete(type, stack) \
-   type##_stack_delete((stack))
+   typecheck_stack_ptr(stack, type, \
+      type##_stack_delete((stack)) \
+   )
 
 #define stack_empty(type, stack) \
-   type##_stack_empty((stack))
+   typecheck_stack_ptr(stack, type, \
+      type##_stack_empty((stack)) \
+   )
 
 #define stack_full(type, stack) \
-   type##_stack_full((stack))
+   typecheck_stack_ptr(stack, type, \
+      type##_stack_full((stack)) \
+   )
 
 #define stack_push(type, stack, value) \
-   type##_stack_push((stack), (value))
+   typecheck_stack_ptr(stack, type, \
+      type##_stack_push((stack), (value)) \
+   )
 
 #define stack_pop(type, stack) \
-   type##_stack_pop((stack))
+   typecheck_stack_ptr(stack, type, \
+      type##_stack_pop((stack)) \
+   )
 
 #define stack_peek(type, stack) \
-   type##_stack_peek((stack))
+   typecheck_stack_ptr(stack, type, \
+      type##_stack_peek((stack)) \
+   )
 
 #define stack_reverse(type, stack) \
-   type##_stack_reverse((stack))
+   typecheck_stack_ptr(stack, type, \
+      type##_stack_reverse((stack)) \
+   )
 
 
 #endif /* __STACK_H */

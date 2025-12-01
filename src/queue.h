@@ -232,6 +232,28 @@ void type##_queue_reverse(type##_queue_s *const restrict queue) \
 
 
 /**
+ * typecheck_queue_ptr macro
+ * --------------------------
+ * Compile-time validation that 'var' is a pointer to a queue of 'type'.
+ *
+ * Usage:
+ *   typecheck_queue_ptr(var, type, expr);
+ *
+ * Purpose:
+ *   Ensures that 'var' is either a pointer to 'type##_queue_s' or
+ *   'const type##_queue_s'. Useful for generic queue macros like
+ *   queue_peek() or queue_deque() to produce clear compile-time errors
+ *   if a non-queue pointer is passed.
+ *
+ * Behavior:
+ *   - C11+: uses typecheck_ptr with _Generic for compile-time checking.
+ *   - C99 fallback: simply evaluates 'expr' (no type enforcement).
+ */
+#define typecheck_queue_ptr(var, type, expr) \
+   typecheck_ptr(var, type##_queue_s, expr)
+
+
+/**
  * Deque function macros
  * --------------------
  * Provides type-generic macros for queue operations.
@@ -248,34 +270,54 @@ void type##_queue_reverse(type##_queue_s *const restrict queue) \
  *   queue_delete(int, &q);               // Free any heap memory
  */
 #define queue_init(type, queue) \
-   type##_queue_init((queue))
+   typecheck_queue_ptr(queue, type, \
+      type##_queue_init((queue)) \
+   )
 
 #define queue_resize(type, queue) \
-   type##_queue_resize((queue))
+   typecheck_queue_ptr(queue, type, \
+      type##_queue_resize((queue)) \
+   )
 
 #define queue_clear(type, queue) \
-   type##_queue_clear((queue))
+   typecheck_queue_ptr(queue, type, \
+      type##_queue_clear((queue)) \
+   )
 
 #define queue_delete(type, queue) \
-   type##_queue_delete((queue))
+   typecheck_queue_ptr(queue, type, \
+      type##_queue_delete((queue)) \
+   )
 
 #define queue_empty(type, queue) \
-   type##_queue_empty((queue))
+   typecheck_queue_ptr(queue, type, \
+      type##_queue_empty((queue)) \
+   )
 
 #define queue_full(type, queue) \
-   type##_queue_full((queue))
+   typecheck_queue_ptr(queue, type, \
+      type##_queue_full((queue)) \
+   )
 
 #define queue_enque(type, queue, value) \
-   type##_queue_enque((queue), (value))
+   typecheck_queue_ptr(queue, type, \
+      type##_queue_enque((queue), (value)) \
+   )
 
 #define queue_deque(type, queue) \
-   type##_queue_deque((queue))
+   typecheck_queue_ptr(queue, type, \
+      type##_queue_deque((queue)) \
+   )
 
 #define queue_peek(type, queue) \
-   type##_queue_peek((queue))
+   typecheck_queue_ptr(queue, type, \
+      type##_queue_peek((queue)) \
+   )
 
 #define queue_reverse(type, queue) \
-   type##_queue_reverse((queue))
+   typecheck_queue_ptr(queue, type, \
+      type##_queue_reverse((queue)) \
+   )
 
 
 #endif /* __QUEUE_H */

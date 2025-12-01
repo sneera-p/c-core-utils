@@ -250,6 +250,26 @@ type type##_deque_peek_tail(const type##_deque_s *const restrict deque) \
 
 
 /**
+ * typecheck_dequek_ptr macro
+ * ---------------------------
+ * Compile-time validation that 'var' is a pointer to a deque of 'type'.
+ *
+ * Usage:
+ *   typecheck_dequek_ptr(var, type, expr);
+ *
+ * Ensures that 'var' is either a pointer to 'type##_sdeque_s' or
+ * 'const type##_sdeque_s'. Useful for generic deque macros to produce
+ * clear compile-time errors if a non-deque pointer is passed.
+ *
+ * Behavior:
+ *   - C11+: uses typecheck_ptr with _Generic for compile-time checking.
+ *   - C99 fallback: simply evaluates 'expr' (no type enforcement).
+ */
+#define typecheck_deque_ptr(var, type, expr) \
+   typecheck_ptr(var, type##_deque_s, expr)
+
+
+/**
  * Deque function macros
  * --------------------
  * Provides type-generic macros for deque operations.
@@ -266,40 +286,64 @@ type type##_deque_peek_tail(const type##_deque_s *const restrict deque) \
  *   deque_delete(int, &dq);               // Free any heap memory
  */
 #define deque_init(type, deque) \
-   type##_deque_init((deque))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_init((deque)) \
+   )
 
 #define deque_resize(type, deque) \
-   type##_deque_resize((deque))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_resize((deque)) \
+   )
 
 #define deque_clear(type, deque) \
-   type##_deque_clear((deque))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_clear((deque)) \
+   )
 
 #define deque_delete(type, deque) \
-   type##_deque_delete((deque))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_delete((deque)) \
+   )
 
 #define deque_empty(type, deque) \
-   type##_deque_empty((deque))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_empty((deque)) \
+   )
 
 #define deque_full(type, deque) \
-   type##_deque_full((deque))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_full((deque)) \
+   )
 
 #define deque_insert_head(type, deque, value) \
-   type##_deque_insert_head((deque), (value))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_insert_head((deque), (value)) \
+   )
 
 #define deque_insert_tail(type, deque, value) \
-   type##_deque_insert_tail((deque), (value))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_insert_tail((deque), (value)) \
+   )
 
 #define deque_remove_head(type, deque) \
-   type##_deque_remove_head((deque))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_remove_head((deque)) \
+   )
 
 #define deque_remove_tail(type, deque) \
-   type##_deque_remove_tail((deque))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_remove_tail((deque)) \
+   )
 
 #define deque_peek_head(type, deque) \
-   type##_deque_peek_head((deque))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_peek_head((deque)) \
+   )
 
 #define deque_peek_tail(type, deque) \
-   type##_deque_peek_tail((deque))
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_peek_tail((deque)) \
+   )
 
 
 #endif /* __DEQUE_H */
