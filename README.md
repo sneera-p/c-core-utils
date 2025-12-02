@@ -105,6 +105,8 @@ MEMORY_COPY(&dst, &src, sizeof(big_t));  // often faster than plain memcpy()
 
 ### Stack Example (LIFO)
 
+➡️ **[Full Stack Documentation](docs/stack.md)**  
+
 ```c
 // my_stack.h
 #pragma once
