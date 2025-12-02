@@ -144,7 +144,7 @@ In release builds, the checks disappear entirely.
 
 All operations are type-specific once generated.
 
-Constructor / Destructor
+<!-- Constructor / Destructor
 Function	Description
 type_stack_init(stack*)	Initialize stack using inline buffer
 type_stack_delete(stack*)	Free heap storage if used
@@ -161,7 +161,7 @@ type_stack_pop(stack*) → bool	Remove top element, no return
 type_stack_reverse(stack*)	Reverse in-place
 Inspection Functions
 Function	Description
-type_stack_peek(stack*) → type	Returns top value; asserts non-empty
+type_stack_peek(stack*) → type	Returns top value; asserts non-empty -->
 
 # Macros for User-Facing API
 
