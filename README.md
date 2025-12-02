@@ -47,6 +47,8 @@ struct entity {
 
 #### static-assert.h – Compile-time checks
 
+➡️ **[Static-Assert Documentation](docs/static-assert.md)**
+
 ```c
 #include "static-assert.h"
 
@@ -153,7 +155,7 @@ void demo_stack(void)
 
 ### Queue Example (FIFO)
 
-➡️ **[Queue Documentation](docs/queue.md)**  
+➡️ **[Queue Documentation](docs/queue.md)**
 
 ```c
 // my_queue.h
@@ -199,6 +201,8 @@ void demo_queue(void)
 ```
 
 ### Deque Example (Double-Ended Queue)
+
+➡️ **[Deque Documentation](docs/deque.md)**
 
 ```c
 // my_deque.h
