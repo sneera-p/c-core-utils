@@ -153,6 +153,8 @@ void demo_stack(void)
 
 ### Queue Example (FIFO)
 
+➡️ **[Queue Documentation](docs/queue.md)**  
+
 ```c
 // my_queue.h
 #pragma once
