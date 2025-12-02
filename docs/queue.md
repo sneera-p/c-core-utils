@@ -141,20 +141,19 @@ All operations are type-specific once generated.
 
 2. Capacity Functions
 
-- `type_queue_empty(queue*)` → bool — len == 0
-- `type_queue_full(queue*)` → bool — len == size
-- `type_queue_resize(queue*)` → bool — Grow using growth_factor
+- `type_queue_empty(queue*) → bool` — len == 0
+- `type_queue_full(queue*) → bool` — len == size
+- `type_queue_resize(queue*) → bool` — Grow using growth_factor
 
 3. Mutation Functions
 
 - `type_queue_enque(queue*, value)` → bool — Append a value at tail (may resize)
-- `type_queue_deque(queue*)` → bool — Remove head element
+- `type_queue_deque(queue*) → bool` — Remove head element
 - `type_queue_reverse(queue*)` — Reverse in-place
 
 4. View Functions
 
-- `type_queue_peek(queue*)` → type — Returns head element; asserts non-empty
-- `type_stack_peek(stack*) → type` — Return top value; asserts non-empty  
+- `type_queue_peek(queue*) → type` — Returns head element; asserts non-empty
 
 
 
