@@ -48,7 +48,7 @@ The signature:
 bool type##_stack_pop(type##_stack_s *stack);
 ```
 
-pop() only removes the top element and returns false if the stack is empty.
+`pop()` only removes the top element and returns false if the stack is empty.
 
 Why?
 
@@ -75,9 +75,9 @@ assert(!stack_empty(stack));
 
 Meaning:
 
-- Calling peek() on an empty stack is a bug, not a recoverable error
+- Calling `peek()` on an empty stack is a bug, not a recoverable error
 - In debug builds → aborts with assertion failure
-- In release builds (NDEBUG) → precondition disappears, and misuse results in undefined behavior (as intended)
+- In release builds (`NDEBUG`) → precondition disappears, and misuse results in undefined behavior (as intended)
 
 To perform a safe runtime check, you must manually guard with:
 
@@ -90,7 +90,7 @@ if (!stack_empty(T, &stack)) {
 
 ## 4. Resizing Uses Power-of-Two Growth
 
-Your init_size and growth_factor are both required to be powers of two.
+Your *init_size* and *growth_factor* are both required to be powers of two.
 
 Benefits:
 
@@ -116,7 +116,7 @@ typecheck_stack_ptr(stack, type, expr)
 
 This ensures:
 
-- stack(int) is only used with the int specialization
+- `stack(int)` is only used with the int specialization
 - Accidental mixing of types produces compile-time errors
 
 
@@ -128,7 +128,7 @@ During generation:
 assert_type(validate_value_fn((type){0}), bool);
 ```
 
-validate_value_fn() is called in debug builds (assert(validate_value_fn(value));).
+`validate_value_fn()` is called in debug builds.
 
 This allows:
 
@@ -144,24 +144,29 @@ In release builds, the checks disappear entirely.
 
 All operations are type-specific once generated.
 
-<!-- Constructor / Destructor
-Function	Description
-type_stack_init(stack*)	Initialize stack using inline buffer
-type_stack_delete(stack*)	Free heap storage if used
-type_stack_clear(stack*)	Reset length to 0
-Capacity Functions
-Function	Description
-type_stack_empty(stack*) → bool	Returns whether length == 0
-type_stack_full(stack*) → bool	Returns whether length == size
-type_stack_resize(stack*) → bool	Grows stack using growth_factor
-Mutation Functions
-Function	Description
-type_stack_push(stack*, value) → bool	Push value (may resize)
-type_stack_pop(stack*) → bool	Remove top element, no return
-type_stack_reverse(stack*)	Reverse in-place
-Inspection Functions
-Function	Description
-type_stack_peek(stack*) → type	Returns top value; asserts non-empty -->
+1. Constructor / Destructor
+
+- `type_stack_init(stack*)` — Initialize stack using inline buffer  
+- `type_stack_delete(stack*)` — Free heap storage if used  
+- `type_stack_clear(stack*)` — Reset length to 0  
+
+2. Capacity Functions
+
+- `type_stack_empty(stack*) → bool` — True if length == 0  
+- `type_stack_full(stack*) → bool` — True if length == size  
+- `type_stack_resize(stack*) → bool` — Grow using growth_factor 
+
+3. Mutation Functions
+
+- `type_stack_push(stack*, value) → bool` — Push value (may resize)  
+- `type_stack_pop(stack*) → bool` — Remove top element  
+- `type_stack_reverse(stack*)` — Reverse in-place  
+
+4. View Functions
+
+- `type_stack_peek(stack*) → type` — Return top value; asserts non-empty  
+
+
 
 # Macros for User-Facing API
 
@@ -179,6 +184,8 @@ stack_resize(type, stack_ptr)
 stack_reverse(type, stack_ptr)
 stack_clear(type, stack_ptr)
 ```
+
+
 
 # Usage Example
 
@@ -246,10 +253,10 @@ int main() {
 
 # Error Handling Model
 
-- push(): may fail (returns false) if allocation fails
-- pop(): returns false when called on empty stack
-- peek(): asserts and aborts in debug builds if the stack is empty
-- resize(): returns false on allocation failure
+- `push()`: may fail (returns false) if allocation fails
+- `pop()`: returns false when called on empty stack
+- `peek()`: asserts and aborts in debug builds if the stack is empty
+- `resize()`: returns false on allocation failure
 
 Runtime safety is explicit; misuse is treated as a programming error.
 
@@ -257,8 +264,7 @@ Runtime safety is explicit; misuse is treated as a programming error.
 
 # Notes & Best Practices
 
-- Always check stack_empty() before calling peek() in production code
-- For large structures, prefer peek() + pop() instead of copying via pop
-- After calling stack_delete(), the stack returns to its inline buffer
+- Check `stack_empty()` before calling `stack_peek()` in production code when you might call `stack_peek()` on an empty stack
+- After calling `stack_delete()`, the stack returns to its inline buffer
 - If your type is large, consider using pointers to reduce copying
 - You can embed the stack struct directly (no dynamic allocation needed)

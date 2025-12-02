@@ -47,6 +47,8 @@ struct entity {
 
 #### static-assert.h – Compile-time checks
 
+➡️ **[Static-Assert Documentation](docs/static-assert.md)**
+
 ```c
 #include "static-assert.h"
 
@@ -105,7 +107,7 @@ MEMORY_COPY(&dst, &src, sizeof(big_t));  // often faster than plain memcpy()
 
 ### Stack Example (LIFO)
 
-➡️ **[Full Stack Documentation](docs/stack.md)**  
+➡️ **[Stack Documentation](docs/stack.md)**  
 
 ```c
 // my_stack.h
@@ -153,6 +155,8 @@ void demo_stack(void)
 
 ### Queue Example (FIFO)
 
+➡️ **[Queue Documentation](docs/queue.md)**
+
 ```c
 // my_queue.h
 #pragma once
@@ -197,6 +201,8 @@ void demo_queue(void)
 ```
 
 ### Deque Example (Double-Ended Queue)
+
+➡️ **[Deque Documentation](docs/deque.md)**
 
 ```c
 // my_deque.h
