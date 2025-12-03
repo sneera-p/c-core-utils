@@ -187,7 +187,49 @@ stack_clear(type, stack_ptr)
 
 
 
-# Usage Example
+# Usage Example #1
+
+```c
+#include <stdlib.h>
+#include "stack.h"
+
+#define DOUBLE_STACK_BUFFER 8
+#define DOUBLE_STACK_GROWTH 4
+
+static bool validate_double(double x)
+{ 
+    return true; 
+}
+
+DEFINE_STACK(double, int, DOUBLE_STACK_BUFFER)
+GENERATE_STACK(double. int, DOUBLE_STACK_BUFFER, DOUBLE_STACK_GROWTH, validate_double, malloc, realloc, free)
+
+int main()
+{
+    stack(double) s;
+    stack_init(double, &s);
+
+    stack_push(double, &s, 3.133);
+    stack_push(double, &s, -1.267);
+    stack_push(double, &s, 645.5f);
+    stack_push(double, &s, 10.0);
+
+    double x = stack_peek(double, &s); // 10.0
+
+    stack_reverse(double, &s);
+    double y = stack_peek(double, &s); // 3.133
+
+    stack_pop(double, &s);
+    double z = stack_peek(double, &s); // -1.267;
+
+    stack_delete(double, &s); // Recommended to avoid memory leaks    
+    return 0;
+}
+```
+
+
+
+# Usage Example #2
 
 1. In your header file (.h)
 

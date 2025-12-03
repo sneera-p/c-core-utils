@@ -9,7 +9,7 @@ A lightweight, efficient, type-safe generic deque (double-ended queue) implement
 - Type-safe API via generated functions and wrapper macros
 - Optional element validation in debug builds
 - Custom user-supplied allocators, reallocation, and free functions
-- Deques on both ends (insert/remove from both the head and the tail)
+- Deques on both ends (insert/remove from both the front and the back)
 - Strong design-by-contract behavior with explicit assertions
 
 
@@ -30,15 +30,15 @@ Each deque begins with a fixed-size circular inline buffer (init_size), which pr
 
 Functions
 
-- `insert_head()`
-- `insert_tail()`
-- `remove_head()`
-- `remove_tail()` 
+- `insert_front()`
+- `insert_back()`
+- `remove_front()`
+- `remove_back()` 
 
-return a status (true/false):
+return a status (true/false)
 
 - Insert/Remove Failure: Allocation failure or deque being full/empty results in a return value of false.
-- Peek Operations: peek_head() and peek_tail() return values or assert if the deque is empty.
+- Peek Operations: peek_front() and peek_back() return values or assert if the deque is empty.
 
 
 ## 3. Full Compile-Time Type Safety
@@ -48,7 +48,7 @@ The library uses macros to ensure that only the correct deque type can be used, 
 ```c
 deque(int) dq;
 deque_init(int, &dq);
-deque_insert_tail(int, &dq, 10); // Valid
+deque_insert_back(int, &dq, 10); // Valid
 ```
 
 If a mismatch occurs, a compile-time error is generated.
@@ -79,15 +79,15 @@ All operations are type-specific once generated. The core operations available a
 
 3. Mutation Functions
 
-- type_deque_insert_head(deque*, value) — Inserts an element at the head of the deque.
-- type_deque_insert_tail(deque*, value) — Inserts an element at the tail of the deque.
-- type_deque_remove_head(deque*) — Removes the element at the head.
-- type_deque_remove_tail(deque*) — Removes the element at the tail.
+- type_deque_insert_front(deque*, value) — Inserts an element at the front of the deque.
+- type_deque_insert_back(deque*, value) — Inserts an element at the back of the deque.
+- type_deque_remove_front(deque*) — Removes the element at the front.
+- type_deque_remove_back(deque*) — Removes the element at the back.
 
 4. View Functions
 
-- type_deque_peek_head(deque*) → type — Returns the head element.
-- type_deque_peek_tail(deque*) → type — Returns the tail element.
+- type_deque_peek_front(deque*) → type — Returns the front element.
+- type_deque_peek_back(deque*) → type — Returns the back element.
 
 
 
@@ -102,12 +102,12 @@ deque_clear(type, deque)     // Clear the deque
 deque_delete(type, deque)    // Delete the deque
 deque_empty(type, deque)     // Check if deque is empty
 deque_full(type, deque)      // Check if deque is full
-deque_insert_head(type, deque, value) // Insert at the head
-deque_insert_tail(type, deque, value) // Insert at the tail
-deque_remove_head(type, deque)       // Remove from the head
-deque_remove_tail(type, deque)       // Remove from the tail
-deque_peek_head(type, deque)         // Peek at the head
-deque_peek_tail(type, deque)         // Peek at the tail
+deque_insert_front(type, deque, value) // Insert at the front
+deque_insert_back(type, deque, value) // Insert at the back
+deque_remove_front(type, deque)       // Remove from the front
+deque_remove_back(type, deque)       // Remove from the back
+deque_peek_front(type, deque)         // Peek at the front
+deque_peek_back(type, deque)         // Peek at the back
 ```
 
 Deque type shorthand:
@@ -164,16 +164,16 @@ int main() {
     deque(int) dq;
     deque_init(int, &dq);
 
-    deque_insert_tail(int, &dq, 10);
-    deque_insert_tail(int, &dq, 20);
+    deque_insert_back(int, &dq, 10);
+    deque_insert_back(int, &dq, 20);
 
     if (!deque_empty(int, &dq)) {
-        int head = deque_peek_head(int, &dq);
-        printf("Head = %d\n", head);
+        int front = deque_peek_front(int, &dq);
+        printf("Head = %d\n", front);
     }
 
-    deque_remove_head(int, &dq);
-    deque_remove_tail(int, &dq);
+    deque_remove_front(int, &dq);
+    deque_remove_back(int, &dq);
 
     deque_delete(int, &dq);
 }
@@ -183,16 +183,16 @@ int main() {
 
 # Error Handling Model
 
-- `insert_head()` / insert_tail(): Return false if the deque is full or allocation fails.
-- `remove_head()` / remove_tail(): Return false if the deque is empty.
-- `peek_head()` / peek_tail(): Assert in debug builds if the deque is empty.
+- `insert_front()` / `insert_back()`: Return false if the deque is full or allocation fails.
+- `remove_front()` / `remove_back()`: Return false if the deque is empty.
+- `peek_front()` / `peek_back()`: Assert in debug builds if the deque is empty.
 - `resize()`: Returns false if resizing fails due to allocation issues.
 
 
 
 # Notes & Best Practices
 
-- Always guard deque_peek_head() and deque_peek_tail() with deque_empty() in production code when you might call these on an empty deque.
-- After calling deque_delete(), the deque returns to its inline buffer.
+- Always guard `deque_peek_front()` and `deque_peek_back()` with `deque_empty()` in production code when you might call these on an empty deque.
+- After calling `deque_delete()`, the deque returns to its inline buffer.
 - For large element types, store pointers instead of by-value objects.
 - Avoid mixing deque specializations — type safety is strict, and mismatched types will result in compile-time errors.

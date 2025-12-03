@@ -89,7 +89,7 @@ static void test_float_queue_resize(void **state)
    // wrapped
    queue_init(float, &queue);
 
-   queue.head = 2;
+   queue.front = 2;
    queue.len = queue.size;
    size_t sum2 = FLOAT_QUEUE_INIT_SIZE;
    for (size_t i = 0; i < 3; i++)
@@ -127,7 +127,7 @@ static void test_float_queue_enque_deque(void **state)
    for (size_t i = 0; i < ARRAY_LEN(mock_floats); i++)
    {
       queue_enque(float, queue, mock_floats[i]);
-      float result = queue->values[(queue->head + queue->len - 1) % queue->size];
+      float result = queue->values[(queue->front + queue->len - 1) % queue->size];
       assert_float_equal(result, mock_floats[i], FLOAT_EPS);
    }
 
@@ -261,7 +261,7 @@ static void test_car_queue_resize(void **state)
    // wrapped
    queue_init(car_s, &queue);
 
-   queue.head = 2;
+   queue.front = 2;
    queue.len = queue.size;
    size_t sum2 = FLOAT_QUEUE_INIT_SIZE;
    for (size_t i = 0; i < 3; i++)
@@ -299,7 +299,7 @@ static void test_car_queue_enque_deque(void **state)
    for (size_t i = 0; i < ARRAY_LEN(mock_cars); i++)
    {
       queue_enque(car_s, queue, mock_cars[i]);
-      car_s result = queue->values[(queue->head + queue->len - 1) % queue->size];
+      car_s result = queue->values[(queue->front + queue->len - 1) % queue->size];
       assert_memory_equal(&result, &mock_cars[i], sizeof(car_s));
    }
 

@@ -36,7 +36,7 @@ typedef struct \
 { \
    type inline_buffer[init_size]; \
    type *values; \
-   len_type head; \
+   len_type front; \
    len_type len; \
    len_type size; \
 } type##_queue_s; \
@@ -44,7 +44,7 @@ typedef struct \
 static inline void type##_queue_init(type##_queue_s *const restrict queue) \
 { \
    queue->values = queue->inline_buffer; \
-   queue->head = 0; \
+   queue->front = 0; \
    queue->len = 0; \
    queue->size = init_size; \
 } \
@@ -110,7 +110,7 @@ bool type##_queue_resize(type##_queue_s *const restrict queue) \
    len_type new_size = queue->size * growth_factor; \
 \
    const bool in_heap = (queue->values != queue->inline_buffer); /* underlying array is allocated in heap */ \
-   const bool not_wrapped = (queue->head + queue->len <= queue->size); /* Elements not wrapped around the underlying array */ \
+   const bool not_wrapped = (queue->front + queue->len <= queue->size); /* Elements not wrapped around the underlying array */ \
 \
    if (not_wrapped && in_heap) \
    { \
@@ -130,9 +130,9 @@ bool type##_queue_resize(type##_queue_s *const restrict queue) \
       } \
       else \
       { \
-         len_type first_chunk = queue->size - queue->head; \
-         MEMORY_COPY(tmp, &queue->values[queue->head], sizeof(type) * first_chunk); \
-         MEMORY_COPY((type*)tmp + first_chunk, queue->values, sizeof(type) * queue->head); \
+         len_type first_chunk = queue->size - queue->front; \
+         MEMORY_COPY(tmp, &queue->values[queue->front], sizeof(type) * first_chunk); \
+         MEMORY_COPY((type*)tmp + first_chunk, queue->values, sizeof(type) * queue->front); \
       } \
 \
       if (in_heap) \
@@ -142,7 +142,7 @@ bool type##_queue_resize(type##_queue_s *const restrict queue) \
    queue->size = new_size; \
    queue->values = (type*)tmp; \
    if (!not_wrapped) \
-      queue->head = 0; \
+      queue->front = 0; \
    return true; \
 } \
 \
@@ -150,7 +150,7 @@ void type##_queue_clear(type##_queue_s *const restrict queue) \
 { \
    assert(queue); \
    queue->len = 0; \
-   queue->head = 0; \
+   queue->front = 0; \
 } \
 \
 void type##_queue_delete(type##_queue_s *const restrict queue) \
@@ -171,8 +171,8 @@ bool type##_queue_enque(type##_queue_s *const restrict queue, const type value) 
    assert(validate_value_fn(value)); \
    if (type##_queue_full(queue) && !type##_queue_resize(queue)) \
       return false; \
-   /* queue->values[(queue->head + queue->len) % queue->size] = value; */ \
-   queue->values[(queue->head + queue->len) & (queue->size - 1)] = value; \
+   /* queue->values[(queue->front + queue->len) % queue->size] = value; */ \
+   queue->values[(queue->front + queue->len) & (queue->size - 1)] = value; \
    queue->len++; \
    return true; \
 } \
@@ -182,8 +182,8 @@ bool type##_queue_deque(type##_queue_s *const restrict queue) \
    assert(queue); \
    if (type##_queue_empty(queue)) \
       return false; \
-   /* queue->head = (queue->head + 1) % queue->size; */ \
-   queue->head = (queue->head + 1) & (queue->size - 1); \
+   /* queue->front = (queue->front + 1) % queue->size; */ \
+   queue->front = (queue->front + 1) & (queue->size - 1); \
    queue->len--; \
    return true; \
 } \
@@ -192,7 +192,7 @@ type type##_queue_peek(const type##_queue_s *const restrict queue) \
 { \
    assert(queue); \
    assert(!type##_queue_empty(queue)); \
-   return queue->values[queue->head]; \
+   return queue->values[queue->front]; \
 } \
 \
 void type##_queue_reverse(type##_queue_s *const restrict queue) \
@@ -201,12 +201,12 @@ void type##_queue_reverse(type##_queue_s *const restrict queue) \
    if (queue->len < 2) \
       return; \
 \
-   len_type head = queue->head; \
-   len_type tail = queue->head + queue->len - 1; \
+   len_type front = queue->front; \
+   len_type tail = queue->front + queue->len - 1; \
    len_type mask = queue->size - 1; \
    for (len_type i = 0; i < queue->len / 2; i++) \
-      /* SWAP(type, queue->values[(head + i) % queue->size], queue->values[(tail - i) % queue->size]); */ \
-      SWAP(type, queue->values[(head + i) & mask], queue->values[(tail - i) & mask]); \
+      /* SWAP(type, queue->values[(front + i) % queue->size], queue->values[(tail - i) % queue->size]); */ \
+      SWAP(type, queue->values[(front + i) & mask], queue->values[(tail - i) & mask]); \
 }
 
 
@@ -264,8 +264,8 @@ void type##_queue_reverse(type##_queue_s *const restrict queue) \
  * Usage:
  *   queue(int) q = queue_create(int);    // Create a new int queue
  *   queue_insert_tail(int, &q, 42);      // Insert a value
- *   int top = queue_peek_head(int, &q);  // Peek at the top value
- *   queue_remove_head(int, &q);          // Pop the top value
+ *   int top = queue_peek_front(int, &q);  // Peek at the top value
+ *   queue_remove_front(int, &q);          // Pop the top value
  *   queue_clear(int, &q);                // Reset the queue
  *   queue_delete(int, &q);               // Free any heap memory
  */
