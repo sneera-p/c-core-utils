@@ -147,13 +147,13 @@ All operations are type-specific once generated.
 
 3. Mutation Functions
 
-- `type_queue_enque(queue*, value)` → bool — Append a value at tail (may resize)
-- `type_queue_deque(queue*) → bool` — Remove head element
+- `type_queue_enque(queue*, value)` → bool — Append a value at back (may resize)
+- `type_queue_deque(queue*) → bool` — Remove front element
 - `type_queue_reverse(queue*)` — Reverse in-place
 
 4. View Functions
 
-- `type_queue_peek(queue*) → type` — Returns head element; asserts non-empty
+- `type_queue_peek(queue*) → type` — Returns front element; asserts non-empty
 
 
 
@@ -278,8 +278,8 @@ int main() {
     queue_enque(int, &q, 20);
 
     if (!queue_empty(int, &q)) {
-        int head = queue_peek(int, &q);
-        printf("Head = %d\n", head);
+        int front = queue_peek(int, &q);
+        printf("Head = %d\n", front);
     }
 
     queue_deque(int, &q);

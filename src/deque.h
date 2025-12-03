@@ -36,7 +36,7 @@ typedef struct \
 { \
    type inline_buffer[init_size]; \
    type *values; \
-   len_type head; \
+   len_type front; \
    len_type len; \
    len_type size; \
 } type##_deque_s; \
@@ -44,7 +44,7 @@ typedef struct \
 static inline void type##_deque_init(type##_deque_s *const restrict deque) \
 { \
    deque->values = deque->inline_buffer; \
-   deque->head = 0; \
+   deque->front = 0; \
    deque->len = 0; \
    deque->size = init_size; \
 } \
@@ -61,12 +61,12 @@ static inline bool type##_deque_full(const type##_deque_s *const restrict deque)
 bool type##_deque_resize(type##_deque_s *const restrict); \
 void type##_deque_clear(type##_deque_s *const restrict); \
 void type##_deque_delete(type##_deque_s *const restrict); \
-bool type##_deque_insert_head(type##_deque_s *const restrict, const type); \
-bool type##_deque_insert_tail(type##_deque_s *const restrict, const type); \
-bool type##_deque_remove_head(type##_deque_s *const restrict); \
-bool type##_deque_remove_tail(type##_deque_s *const restrict); \
-type type##_deque_peek_head(const type##_deque_s *const restrict); \
-type type##_deque_peek_tail(const type##_deque_s *const restrict);
+bool type##_deque_insert_front(type##_deque_s *const restrict, const type); \
+bool type##_deque_insert_back(type##_deque_s *const restrict, const type); \
+bool type##_deque_remove_front(type##_deque_s *const restrict); \
+bool type##_deque_remove_back(type##_deque_s *const restrict); \
+type type##_deque_peek_front(const type##_deque_s *const restrict); \
+type type##_deque_peek_back(const type##_deque_s *const restrict);
 
 
 /**
@@ -112,7 +112,7 @@ bool type##_deque_resize(type##_deque_s *const restrict deque) \
    len_type new_size = deque->size * growth_factor; \
 \
    const bool in_heap = (deque->values != deque->inline_buffer); /* underlying array is allocated in heap */ \
-   const bool not_wrapped = (deque->head + deque->len <= deque->size); /* Elements not wrapped around the underlying array */ \
+   const bool not_wrapped = (deque->front + deque->len <= deque->size); /* Elements not wrapped around the underlying array */ \
 \
    if (not_wrapped && in_heap) \
    { \
@@ -132,9 +132,9 @@ bool type##_deque_resize(type##_deque_s *const restrict deque) \
       } \
       else \
       { \
-         len_type first_chunk = deque->size - deque->head; \
-         MEMORY_COPY(tmp, &deque->values[deque->head], sizeof(type) * first_chunk); \
-         MEMORY_COPY((type*)tmp + first_chunk, deque->values, sizeof(type) * deque->head); \
+         len_type first_chunk = deque->size - deque->front; \
+         MEMORY_COPY(tmp, &deque->values[deque->front], sizeof(type) * first_chunk); \
+         MEMORY_COPY((type*)tmp + first_chunk, deque->values, sizeof(type) * deque->front); \
       } \
 \
       if (in_heap) \
@@ -144,7 +144,7 @@ bool type##_deque_resize(type##_deque_s *const restrict deque) \
    deque->size = new_size; \
    deque->values = (type*)tmp; \
    if (!not_wrapped) \
-      deque->head = 0; \
+      deque->front = 0; \
    return true; \
 } \
 \
@@ -152,7 +152,7 @@ void type##_deque_clear(type##_deque_s *const restrict deque) \
 { \
    assert(deque); \
    deque->len = 0; \
-   deque->head = 0; \
+   deque->front = 0; \
 } \
 \
 void type##_deque_delete(type##_deque_s *const restrict deque) \
@@ -167,43 +167,43 @@ void type##_deque_delete(type##_deque_s *const restrict deque) \
    } \
 } \
 \
-bool type##_deque_insert_head(type##_deque_s *const restrict deque, const type value) \
+bool type##_deque_insert_front(type##_deque_s *const restrict deque, const type value) \
 { \
    assert(deque); \
    assert(validate_value_fn(value)); \
    if (type##_deque_full(deque) && !type##_deque_resize(deque)) \
       return false; \
    deque->len++; \
-   /* deque->head = (deque->head + deque->size - 1) % deque->size; */ \
-   deque->head = (deque->head + deque->size - 1) & (deque->size - 1); \
-   deque->values[deque->head] = value; \
+   /* deque->front = (deque->front + deque->size - 1) % deque->size; */ \
+   deque->front = (deque->front + deque->size - 1) & (deque->size - 1); \
+   deque->values[deque->front] = value; \
    return true; \
 } \
 \
-bool type##_deque_insert_tail(type##_deque_s *const restrict deque, const type value) \
+bool type##_deque_insert_back(type##_deque_s *const restrict deque, const type value) \
 { \
    assert(deque); \
    assert(validate_value_fn(value)); \
    if (type##_deque_full(deque) && !type##_deque_resize(deque)) \
       return false; \
-   /* deque->values[(deque->head + deque->len) % deque->size] = value; */ \
-   deque->values[(deque->head + deque->len) & (deque->size - 1)] = value; \
+   /* deque->values[(deque->front + deque->len) % deque->size] = value; */ \
+   deque->values[(deque->front + deque->len) & (deque->size - 1)] = value; \
    deque->len++; \
    return true; \
 } \
 \
-bool type##_deque_remove_head(type##_deque_s *const restrict deque) \
+bool type##_deque_remove_front(type##_deque_s *const restrict deque) \
 { \
    assert(deque); \
    if (type##_deque_empty(deque)) \
       return false; \
-   /* deque->head = (deque->head + 1) % deque->size; */ \
-   deque->head = (deque->head + 1) & (deque->size - 1); \
+   /* deque->front = (deque->front + 1) % deque->size; */ \
+   deque->front = (deque->front + 1) & (deque->size - 1); \
    deque->len--; \
    return true; \
 } \
 \
-bool type##_deque_remove_tail(type##_deque_s *const restrict deque) \
+bool type##_deque_remove_back(type##_deque_s *const restrict deque) \
 { \
    assert(deque); \
    if (type##_deque_empty(deque)) \
@@ -212,19 +212,19 @@ bool type##_deque_remove_tail(type##_deque_s *const restrict deque) \
    return true; \
 } \
 \
-type type##_deque_peek_head(const type##_deque_s *const restrict deque) \
+type type##_deque_peek_front(const type##_deque_s *const restrict deque) \
 { \
    assert(deque); \
    assert(!type##_deque_empty(deque)); \
-   return deque->values[deque->head]; \
+   return deque->values[deque->front]; \
 } \
 \
-type type##_deque_peek_tail(const type##_deque_s *const restrict deque) \
+type type##_deque_peek_back(const type##_deque_s *const restrict deque) \
 { \
    assert(deque); \
    assert(!type##_deque_empty(deque)); \
-   /* return deque->values[(deque->head + deque->len - 1) % deque->size]; */ \
-   return deque->values[(deque->head + deque->len - 1) & (deque->size - 1)]; \
+   /* return deque->values[(deque->front + deque->len - 1) % deque->size]; */ \
+   return deque->values[(deque->front + deque->len - 1) & (deque->size - 1)]; \
 }
 
 
@@ -279,9 +279,9 @@ type type##_deque_peek_tail(const type##_deque_s *const restrict deque) \
  * 
  * Usage:
  *   deque(int) dq = deque_create(int);    // Create a new int deque
- *   deque_insert_tail(int, &dq, 42);      // Insert a value
- *   int top = deque_peek_head(int, &dq);  // Peek at the top value
- *   deque_remove_head(int, &dq);          // Pop the top value
+ *   deque_insert_back(int, &dq, 42);      // Insert a value
+ *   int top = deque_peek_front(int, &dq);  // Peek at the top value
+ *   deque_remove_front(int, &dq);          // Pop the top value
  *   deque_clear(int, &dq);                // Reset the deque
  *   deque_delete(int, &dq);               // Free any heap memory
  */
@@ -315,34 +315,34 @@ type type##_deque_peek_tail(const type##_deque_s *const restrict deque) \
       type##_deque_full((deque)) \
    )
 
-#define deque_insert_head(type, deque, value) \
+#define deque_insert_front(type, deque, value) \
    typecheck_deque_ptr(deque, type, \
-      type##_deque_insert_head((deque), (value)) \
+      type##_deque_insert_front((deque), (value)) \
    )
 
-#define deque_insert_tail(type, deque, value) \
+#define deque_insert_back(type, deque, value) \
    typecheck_deque_ptr(deque, type, \
-      type##_deque_insert_tail((deque), (value)) \
+      type##_deque_insert_back((deque), (value)) \
    )
 
-#define deque_remove_head(type, deque) \
+#define deque_remove_front(type, deque) \
    typecheck_deque_ptr(deque, type, \
-      type##_deque_remove_head((deque)) \
+      type##_deque_remove_front((deque)) \
    )
 
-#define deque_remove_tail(type, deque) \
+#define deque_remove_back(type, deque) \
    typecheck_deque_ptr(deque, type, \
-      type##_deque_remove_tail((deque)) \
+      type##_deque_remove_back((deque)) \
    )
 
-#define deque_peek_head(type, deque) \
+#define deque_peek_front(type, deque) \
    typecheck_deque_ptr(deque, type, \
-      type##_deque_peek_head((deque)) \
+      type##_deque_peek_front((deque)) \
    )
 
-#define deque_peek_tail(type, deque) \
+#define deque_peek_back(type, deque) \
    typecheck_deque_ptr(deque, type, \
-      type##_deque_peek_tail((deque)) \
+      type##_deque_peek_back((deque)) \
    )
 
 

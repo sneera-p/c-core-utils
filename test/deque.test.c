@@ -89,7 +89,7 @@ static void test_double_deque_resize(void **state)
    // wrapped
    deque_init(double, &deque);
 
-   deque.head = 2;
+   deque.front = 2;
    deque.len = deque.size;
    size_t sum2 = DOUBLE_DEQUE_INIT_SIZE;
    for (size_t i = 0; i < 3; i++)
@@ -106,7 +106,7 @@ static void test_double_deque_resize(void **state)
    assert_ptr_equal(deque.values, deque.inline_buffer);
 }
 
-static void test_double_deque_peek_head_tail(void **state)
+static void test_double_deque_peek_front_back(void **state)
 {
    deque(double) *deque = &((test_state_s*)(*state))->double_deque;
    
@@ -115,52 +115,52 @@ static void test_double_deque_peek_head_tail(void **state)
       deque->values[i] = mock_doubles[i];
       deque->len++;
 
-      double result1 = deque_peek_head(double, deque);
+      double result1 = deque_peek_front(double, deque);
       assert_double_equal(result1, mock_doubles[0], DOUBLE_EPS);
 
-      double result2 = deque_peek_tail(double, deque);
+      double result2 = deque_peek_back(double, deque);
       assert_double_equal(result2, mock_doubles[i], DOUBLE_EPS);
    }
 }
 
-static void test_double_deque_insert_remove_head(void **state)
+static void test_double_deque_insert_remove_front(void **state)
 {
    deque(double) *deque = &((test_state_s*)(*state))->double_deque;
 
    for (size_t i = 0; i < ARRAY_LEN(mock_doubles); i++)
    {
-      deque_insert_head(double, deque, mock_doubles[i]);
+      deque_insert_front(double, deque, mock_doubles[i]);
 
-      double result = deque_peek_head(double, deque);
+      double result = deque_peek_front(double, deque);
       assert_double_equal(result, mock_doubles[i], DOUBLE_EPS);
    }
 
    for (size_t i = ARRAY_LEN(mock_doubles) - 1; i > 0; i--)
    {
-      deque_remove_head(double, deque);
+      deque_remove_front(double, deque);
 
-      double result = deque_peek_head(double, deque);
+      double result = deque_peek_front(double, deque);
       assert_double_equal(result, mock_doubles[i - 1], DOUBLE_EPS);
    }
 }
 
-static void test_double_deque_insert_remove_tail(void **state)
+static void test_double_deque_insert_remove_back(void **state)
 {
    deque(double) *deque = &((test_state_s*)(*state))->double_deque;
 
    for (size_t i = 0; i < ARRAY_LEN(mock_doubles); i++)
    {
-      deque_insert_tail(double, deque, mock_doubles[i]);
+      deque_insert_back(double, deque, mock_doubles[i]);
 
-      double result = deque_peek_tail(double, deque);
+      double result = deque_peek_back(double, deque);
       assert_double_equal(result, mock_doubles[i], DOUBLE_EPS);
    }
 
    for (size_t i = ARRAY_LEN(mock_doubles) - 1; i > 0; i--)
    {
-      deque_remove_tail(double, deque);
+      deque_remove_back(double, deque);
 
-      double result = deque_peek_tail(double, deque);
+      double result = deque_peek_back(double, deque);
       assert_double_equal(result, mock_doubles[i - 1], DOUBLE_EPS);
    }
 }
@@ -172,7 +172,7 @@ static void test_double_deque_empty(void **state)
    const bool result1 = deque_empty(double, deque);
    assert_true(result1);
 
-   deque_insert_tail(double, deque, mock_doubles[0]);
+   deque_insert_back(double, deque, mock_doubles[0]);
 
    const bool result2 = deque_empty(double, deque);
    assert_false(result2);
@@ -186,7 +186,7 @@ static void test_double_deque_full(void **state)
    assert_false(result1);
 
    for (size_t i = 0; i < deque->size; i++)
-      deque_insert_head(double, deque, mock_doubles[i]);
+      deque_insert_front(double, deque, mock_doubles[i]);
    const bool result2 = deque_full(double, deque);
    assert_true(result2);
 
@@ -196,7 +196,7 @@ static void test_double_deque_full(void **state)
 
    const size_t extra_slots = deque->size - deque->len;
    for (size_t i = 0; i < extra_slots; i++)
-      deque_insert_tail(double, deque, mock_doubles[i]);
+      deque_insert_back(double, deque, mock_doubles[i]);
    const bool result4 = deque_full(double, deque);
    assert_true(result4);
 }
@@ -206,7 +206,7 @@ static void test_double_deque_clear(void **state)
    deque(double) *deque = &((test_state_s*)(*state))->double_deque;
 
    for (size_t i = 0; i < ARRAY_LEN(mock_doubles); i++)
-      deque_insert_tail(double, deque, mock_doubles[i]);
+      deque_insert_back(double, deque, mock_doubles[i]);
 
    deque_clear(double, deque);
    const bool result = deque_empty(double, deque);
@@ -287,7 +287,7 @@ static void test_date_deque_resize(void **state)
    // wrapped
    deque_init(date_s, &deque);
 
-   deque.head = 2;
+   deque.front = 2;
    deque.len = deque.size;
    size_t sum2 = DOUBLE_DEQUE_INIT_SIZE;
    for (size_t i = 0; i < 3; i++)
@@ -304,7 +304,7 @@ static void test_date_deque_resize(void **state)
    assert_ptr_equal(deque.values, deque.inline_buffer);
 }
 
-static void test_date_deque_peek_head_tail(void **state)
+static void test_date_deque_peek_front_back(void **state)
 {
    deque(date_s) *deque = &((test_state_s*)(*state))->date_deque;
    
@@ -313,52 +313,52 @@ static void test_date_deque_peek_head_tail(void **state)
       deque->values[i] = mock_dates[i];
       deque->len++;
 
-      date_s result1 = deque_peek_head(date_s, deque);
+      date_s result1 = deque_peek_front(date_s, deque);
       assert_memory_equal(&result1, &mock_dates[0], sizeof(date_s));
 
-      date_s result2 = deque_peek_tail(date_s, deque);
+      date_s result2 = deque_peek_back(date_s, deque);
       assert_memory_equal(&result2, &mock_dates[i], sizeof(date_s));
    }
 }
 
-static void test_date_deque_insert_remove_head(void **state)
+static void test_date_deque_insert_remove_front(void **state)
 {
    deque(date_s) *deque = &((test_state_s*)(*state))->date_deque;
 
    for (size_t i = 0; i < ARRAY_LEN(mock_dates); i++)
    {
-      deque_insert_head(date_s, deque, mock_dates[i]);
+      deque_insert_front(date_s, deque, mock_dates[i]);
 
-      date_s result = deque_peek_head(date_s, deque);
+      date_s result = deque_peek_front(date_s, deque);
       assert_memory_equal(&result, &mock_dates[i], sizeof(date_s));
    }
 
    for (size_t i = ARRAY_LEN(mock_dates) - 1; i > 0; i--)
    {
-      deque_remove_head(date_s, deque);
+      deque_remove_front(date_s, deque);
 
-      date_s result = deque_peek_head(date_s, deque);
+      date_s result = deque_peek_front(date_s, deque);
       assert_memory_equal(&result, &mock_dates[i - 1], sizeof(date_s));
    }
 }
 
-static void test_date_deque_insert_remove_tail(void **state)
+static void test_date_deque_insert_remove_back(void **state)
 {
    deque(date_s) *deque = &((test_state_s*)(*state))->date_deque;
 
    for (size_t i = 0; i < ARRAY_LEN(mock_dates); i++)
    {
-      deque_insert_tail(date_s, deque, mock_dates[i]);
+      deque_insert_back(date_s, deque, mock_dates[i]);
 
-      date_s result = deque_peek_tail(date_s, deque);
+      date_s result = deque_peek_back(date_s, deque);
       assert_memory_equal(&result, &mock_dates[i], sizeof(date_s));
    }
 
    for (size_t i = ARRAY_LEN(mock_dates) - 1; i > 0; i--)
    {
-      deque_remove_tail(date_s, deque);
+      deque_remove_back(date_s, deque);
 
-      date_s result = deque_peek_tail(date_s, deque);
+      date_s result = deque_peek_back(date_s, deque);
       assert_memory_equal(&result, &mock_dates[i - 1], sizeof(date_s));
    }
 }
@@ -370,7 +370,7 @@ static void test_date_deque_empty(void **state)
    const bool result1 = deque_empty(date_s, deque);
    assert_true(result1);
 
-   deque_insert_tail(date_s, deque, mock_dates[0]);
+   deque_insert_back(date_s, deque, mock_dates[0]);
 
    const bool result2 = deque_empty(date_s, deque);
    assert_false(result2);
@@ -384,7 +384,7 @@ static void test_date_deque_full(void **state)
    assert_false(result1);
 
    for (size_t i = 0; i < deque->size; i++)
-      deque_insert_head(date_s, deque, mock_dates[i]);
+      deque_insert_front(date_s, deque, mock_dates[i]);
    const bool result2 = deque_full(date_s, deque);
    assert_true(result2);
 
@@ -394,7 +394,7 @@ static void test_date_deque_full(void **state)
 
    const size_t extra_slots = deque->size - deque->len;
    for (size_t i = 0; i < extra_slots; i++)
-      deque_insert_tail(date_s, deque, mock_dates[i]);
+      deque_insert_back(date_s, deque, mock_dates[i]);
    const bool result4 = deque_full(date_s, deque);
    assert_true(result4);
 }
@@ -404,7 +404,7 @@ static void test_date_deque_clear(void **state)
    deque(date_s) *deque = &((test_state_s*)(*state))->date_deque;
 
    for (size_t i = 0; i < ARRAY_LEN(mock_dates); i++)
-      deque_insert_tail(date_s, deque, mock_dates[i]);
+      deque_insert_back(date_s, deque, mock_dates[i]);
 
    deque_clear(date_s, deque);
    const bool result = deque_empty(date_s, deque);
@@ -417,17 +417,17 @@ int main(void)
    {
       cmocka_unit_test(test_double_deque_init_delete),
       cmocka_unit_test(test_double_deque_resize),
-      cmocka_unit_test_setup_teardown(test_double_deque_peek_head_tail, setup, teardown),
-      cmocka_unit_test_setup_teardown(test_double_deque_insert_remove_head, setup, teardown),
-      cmocka_unit_test_setup_teardown(test_double_deque_insert_remove_tail, setup, teardown),
+      cmocka_unit_test_setup_teardown(test_double_deque_peek_front_back, setup, teardown),
+      cmocka_unit_test_setup_teardown(test_double_deque_insert_remove_front, setup, teardown),
+      cmocka_unit_test_setup_teardown(test_double_deque_insert_remove_back, setup, teardown),
       cmocka_unit_test_setup_teardown(test_double_deque_empty, setup, teardown),
       cmocka_unit_test_setup_teardown(test_double_deque_full, setup, teardown),
       cmocka_unit_test_setup_teardown(test_double_deque_clear, setup, teardown),
       cmocka_unit_test(test_date_deque_init_delete),
       cmocka_unit_test(test_date_deque_resize),
-      cmocka_unit_test_setup_teardown(test_date_deque_peek_head_tail, setup, teardown),
-      cmocka_unit_test_setup_teardown(test_date_deque_insert_remove_head, setup, teardown),
-      cmocka_unit_test_setup_teardown(test_date_deque_insert_remove_tail, setup, teardown),
+      cmocka_unit_test_setup_teardown(test_date_deque_peek_front_back, setup, teardown),
+      cmocka_unit_test_setup_teardown(test_date_deque_insert_remove_front, setup, teardown),
+      cmocka_unit_test_setup_teardown(test_date_deque_insert_remove_back, setup, teardown),
       cmocka_unit_test_setup_teardown(test_date_deque_empty, setup, teardown),
       cmocka_unit_test_setup_teardown(test_date_deque_full, setup, teardown),
       cmocka_unit_test_setup_teardown(test_date_deque_clear, setup, teardown),
