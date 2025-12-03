@@ -185,7 +185,50 @@ queue(type)   // expands to type##_queue_s
 
 
 
-# Usage Example
+# Usage Example #1
+
+```c
+#include <stdlib.h>
+#include "stack.h"
+
+#define INT_QUEUE_BUFFER 8
+#define INT_QUEUE_GROWTH 4
+
+static bool validate_int(int x)
+{ 
+    return true; 
+}
+
+DEFINE_STACK(int, unsigned int, INT_QUEUE_BUFFER)
+GENERATE_STACK(int. unsigned int, INT_QUEUE_BUFFER, INT_QUEUE_GROWTH, validate_int, malloc, realloc, free)
+
+int main()
+{
+    queue(int) s;
+    queue_init(int, &s);
+
+    queue_enque(int, &s, 3);
+    queue_enque(int. &s, -1);
+    queue_enque(int, &s, 64);
+    queue_enque(int, &s, 10);
+
+    int x = queue_peek(int, &s); // 3
+
+    queue_reverse(int, &s);
+    int y = queue_peek(int, &s); // 10
+
+    queue_deque(int, &s);
+    int z = queue_peek(int, &s); // 64;
+
+    stack_delete(int, &s); // Recommended to avoid memory leaks    
+    return 0;
+}
+```
+
+
+
+# Usage Example #2
+
 
 1. In your header file (.h)
 
