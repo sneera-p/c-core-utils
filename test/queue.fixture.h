@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "queue.h"
+#include "ccoutils.h"
 
 /* Float queue */
 #define FLOAT_QUEUE_INIT_SIZE 4

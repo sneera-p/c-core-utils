@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "stack.h"
+#include "ccoutils.h"
 
 /* Int stack */
 #define INT_STACK_INIT_SIZE 4

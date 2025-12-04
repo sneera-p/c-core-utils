@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "deque.h"
+#include "ccoutils.h"
 
 /* Double deque */
 #define DOUBLE_DEQUE_INIT_SIZE 4

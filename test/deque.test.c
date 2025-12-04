@@ -4,7 +4,6 @@
 #include <setjmp.h>
 #include <stdlib.h>
 #include <cmocka.h>
-#include "deque.h"
 #include "deque.fixture.h"
 
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))
