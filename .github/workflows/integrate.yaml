@@ -6,7 +6,7 @@ on:
 
 jobs:
    test:
-      runs-on: ubuntu-slim
+      runs-on: ubuntu-latest
       steps:
          - uses: actions/checkout@v4
          - name: Install dependancies (gcc, cmocka, lua)
