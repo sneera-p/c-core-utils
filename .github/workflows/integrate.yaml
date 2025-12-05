@@ -11,15 +11,15 @@ jobs:
          - uses: actions/checkout@v4
          - name: Install dependancies (gcc, cmocka, lua)
             run: |
-               apk update --no-cache
-               apk add --no-cache \
+               sudo apt-get update
+               sudo apt-get install -y \
                   gcc \
-                  musl-dev \
-                  cmocka-dev \
-                  lua \
-                  lua-dev \
+                  libc-dev \
+                  libcmocka-dev \
+                  lua5.3 \
+                  liblua5.3-dev \
                   lua-filesystem \
-                  pkgconfig
+                  pkg-config
          - name: Verify installations
             run: |
                gcc --version
