@@ -46,23 +46,111 @@ static inline void type##_stack_init(type##_stack_s *const restrict stack) \
    stack->len = 0; \
    stack->size = init_size; \
 } \
-static inline bool type##_stack_empty(const type##_stack_s *const restrict stack) \
+\
+static inline type type##_stack_peek(const type##_stack_s *const restrict stack) \
 { \
    assert(stack); \
-   return stack->len == 0; \
+   assert(!stack_empty(type, stack)); \
+   return stack->values[stack->len - 1]; \
 } \
-static inline bool type##_stack_full(const type##_stack_s *const restrict stack) \
-{ \
-   assert(stack); \
-   return stack->len == stack->size; \
-} \
+\
 bool type##_stack_resize(type##_stack_s *const restrict); \
-void type##_stack_clear(type##_stack_s *const restrict); \
 void type##_stack_delete(type##_stack_s *const restrict); \
 bool type##_stack_push(type##_stack_s *const restrict, const type); \
 bool type##_stack_pop(type##_stack_s *const restrict); \
-type type##_stack_peek(const type##_stack_s *const restrict); \
 void type##_stack_reverse(type##_stack_s *const restrict);
+
+
+/**
+ * stack(type) macro
+ * -----------------
+ * Declares a stack variable of the given type.
+ * 
+ * Parameters:
+ *   type - The element type stored in the stack.
+ * 
+ * Usage (as variable):
+ *   stack(int) s = stack_create(int);
+ * 
+ * Usage (as parameter):
+ *   void process_stack(stack(int) *const s) { ... }
+ * 
+ * Notes:
+ *   - This macro expands to the underlying stack struct type (type##_stack_s).
+ */
+#define stack(type) \
+   type##_stack_s
+
+
+/**
+ * typecheck_stack_ptr macro
+ * --------------------------
+ * Compile-time validation that 'var' is a pointer to a stack of 'type'.
+ *
+ * Usage:
+ *   typecheck_stack_ptr(var, type, expr);
+ *
+ * Ensures that 'var' is either a pointer to 'type##_stack_s' or
+ * 'const type##_stack_s'. Useful for generic stack macros to produce
+ * clear compile-time errors if a non-stack pointer is passed.
+ *
+ * Behavior:
+ *   - C11+: uses typecheck_ptr with _Generic for compile-time checking.
+ *   - C99 fallback: simply evaluates 'expr' (no type enforcement).
+ */
+#define typecheck_stack_ptr(var, type, expr) \
+   typecheck_ptr(var, type##_stack_s, expr)
+
+
+/**
+ * Stack Expression Macros
+ * -----------------------
+ * Provide direct access to stack properties or simple computed expressions
+ * without calling a function. These macros are type-checked at compile-time
+ * (C11+) and perform a runtime NULL check (via assert) for safety.
+ *
+ * Each macro accepts:
+ *   - type  : The element type stored in the stack.
+ *   - stack : Pointer to the stack instance.
+ *
+ * Notes:
+ *   - These macros expand to expressions, not function calls.
+ *   - They can be safely used in conditions, assignments, and other expressions.
+ *   - Runtime checks are included for non-NULL stack pointers.
+ *   - Type safety is enforced at compile time in C11 and later.
+ *
+ * Example:
+ *   stack(int) s;
+ *   stack_init(int, &s);
+ *   if (!stack_full(int, &s))
+ *       stack_push(int, &s, 42);
+ *   int len = stack_len(int, &s);
+ *   stack_clear(int, &s);
+ */
+#define stack_len(type, stack) \
+   typecheck_stack_ptr(stack, type, \
+      stack->len \
+   )
+
+#define stack_size(type, stack) \
+   typecheck_stack_ptr(stack, type, \
+      stack->size \
+   )
+
+#define stack_full(type, stack) \
+   typecheck_stack_ptr(stack, type, \
+      stack->len == stack->size \
+   )
+
+#define stack_empty(type, stack) \
+   typecheck_stack_ptr(stack, type, \
+      stack->len == 0 \
+   )
+
+#define stack_clear(type, stack) \
+   typecheck_stack_ptr(stack, type, \
+      stack->len = 0 \
+   )
 
 
 /**
@@ -135,7 +223,7 @@ void type##_stack_clear(type##_stack_s *const restrict stack) \
 void type##_stack_delete(type##_stack_s *const restrict stack) \
 { \
    assert(stack); \
-   type##_stack_clear(stack); \
+   stack_clear(type, stack); \
    if (stack->values != stack->inline_buffer) \
    { \
       free_fn(stack->values); \
@@ -148,7 +236,7 @@ bool type##_stack_push(type##_stack_s *const restrict stack, const type value) \
 { \
    assert(stack); \
    assert(validate_value_fn(value)); \
-   if (type##_stack_full(stack) && !type##_stack_resize(stack)) \
+   if (stack_full(type, stack) && !type##_stack_resize(stack)) \
       return false; \
 \
    stack->values[stack->len] = value; \
@@ -159,18 +247,11 @@ bool type##_stack_push(type##_stack_s *const restrict stack, const type value) \
 bool type##_stack_pop(type##_stack_s *const restrict stack) \
 { \
    assert(stack); \
-   if (type##_stack_empty(stack)) \
+   if (stack_empty(type, stack)) \
       return false; \
 \
    stack->len--; \
    return true; \
-} \
-\
-type type##_stack_peek(const type##_stack_s *const restrict stack) \
-{ \
-   assert(stack); \
-   assert(!type##_stack_empty(stack)); \
-   return stack->values[stack->len - 1]; \
 } \
 \
 void type##_stack_reverse(type##_stack_s *const restrict stack) \
@@ -183,46 +264,6 @@ void type##_stack_reverse(type##_stack_s *const restrict stack) \
       SWAP(type, stack->values[i], stack->values[stack->len - 1 - i]); \
 }
 
-
-/**
- * stack(type) macro
- * -----------------
- * Declares a stack variable of the given type.
- * 
- * Parameters:
- *   type - The element type stored in the stack.
- * 
- * Usage (as variable):
- *   stack(int) s = stack_create(int);
- * 
- * Usage (as parameter):
- *   void process_stack(stack(int) *const s) { ... }
- * 
- * Notes:
- *   - This macro expands to the underlying stack struct type (type##_stack_s).
- */
-#define stack(type) \
-   type##_stack_s
-
-
-/**
- * typecheck_stack_ptr macro
- * --------------------------
- * Compile-time validation that 'var' is a pointer to a stack of 'type'.
- *
- * Usage:
- *   typecheck_stack_ptr(var, type, expr);
- *
- * Ensures that 'var' is either a pointer to 'type##_stack_s' or
- * 'const type##_stack_s'. Useful for generic stack macros to produce
- * clear compile-time errors if a non-stack pointer is passed.
- *
- * Behavior:
- *   - C11+: uses typecheck_ptr with _Generic for compile-time checking.
- *   - C99 fallback: simply evaluates 'expr' (no type enforcement).
- */
-#define typecheck_stack_ptr(var, type, expr) \
-   typecheck_ptr(var, type##_stack_s, expr)
 
 
 /**
@@ -239,7 +280,6 @@ void type##_stack_reverse(type##_stack_s *const restrict stack) \
  *   stack_push(int, &s, 42);           // Push a value
  *   int top = stack_peek(int, &s);     // Peek at the top value
  *   stack_pop(int, &s);                // Pop the top value
- *   stack_clear(int, &s);              // Reset the stack
  *   stack_delete(int, &s);             // Free any heap memory
  */
 #define stack_init(type, stack) \
@@ -247,29 +287,19 @@ void type##_stack_reverse(type##_stack_s *const restrict stack) \
       type##_stack_init((stack)) \
    )
 
+#define stack_peek(type, stack) \
+   typecheck_stack_ptr(stack, type, \
+      type##_stack_peek((stack)) \
+   )
+
 #define stack_resize(type, stack) \
    typecheck_stack_ptr(stack, type, \
       type##_stack_resize((stack)) \
    )
 
-#define stack_clear(type, stack) \
-   typecheck_stack_ptr(stack, type, \
-      type##_stack_clear((stack)) \
-   )
-
 #define stack_delete(type, stack) \
    typecheck_stack_ptr(stack, type, \
       type##_stack_delete((stack)) \
-   )
-
-#define stack_empty(type, stack) \
-   typecheck_stack_ptr(stack, type, \
-      type##_stack_empty((stack)) \
-   )
-
-#define stack_full(type, stack) \
-   typecheck_stack_ptr(stack, type, \
-      type##_stack_full((stack)) \
    )
 
 #define stack_push(type, stack, value) \
@@ -280,11 +310,6 @@ void type##_stack_reverse(type##_stack_s *const restrict stack) \
 #define stack_pop(type, stack) \
    typecheck_stack_ptr(stack, type, \
       type##_stack_pop((stack)) \
-   )
-
-#define stack_peek(type, stack) \
-   typecheck_stack_ptr(stack, type, \
-      type##_stack_peek((stack)) \
    )
 
 #define stack_reverse(type, stack) \

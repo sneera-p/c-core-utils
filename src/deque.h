@@ -48,25 +48,120 @@ static inline void type##_deque_init(type##_deque_s *const restrict deque) \
    deque->len = 0; \
    deque->size = init_size; \
 } \
-static inline bool type##_deque_empty(const type##_deque_s *const restrict deque) \
+\
+static inline type type##_deque_peek_front(const type##_deque_s *const restrict deque) \
 { \
    assert(deque); \
-   return deque->len == 0; \
+   assert(!deque_empty(type, deque)); \
+   return deque->values[deque->front]; \
 } \
-static inline bool type##_deque_full(const type##_deque_s *const restrict deque) \
+\
+static inline type type##_deque_peek_back(const type##_deque_s *const restrict deque) \
 { \
    assert(deque); \
-   return deque->len == deque->size; \
+   assert(!deque_empty(type, deque)); \
+   /* return deque->values[(deque->front + deque->len - 1) % deque->size]; */ \
+   return deque->values[(deque->front + deque->len - 1) & (deque->size - 1)]; \
 } \
+\
 bool type##_deque_resize(type##_deque_s *const restrict); \
-void type##_deque_clear(type##_deque_s *const restrict); \
 void type##_deque_delete(type##_deque_s *const restrict); \
 bool type##_deque_insert_front(type##_deque_s *const restrict, const type); \
 bool type##_deque_insert_back(type##_deque_s *const restrict, const type); \
 bool type##_deque_remove_front(type##_deque_s *const restrict); \
-bool type##_deque_remove_back(type##_deque_s *const restrict); \
-type type##_deque_peek_front(const type##_deque_s *const restrict); \
-type type##_deque_peek_back(const type##_deque_s *const restrict);
+bool type##_deque_remove_back(type##_deque_s *const restrict);
+
+
+/**
+ * deque(type) macro
+ * -----------------
+ * Declares a deque variable of the given type.
+ * 
+ * Parameters:
+ *   type - The element type stored in the deque.
+ * 
+ * Usage (as variable):
+ *   deque(int) dq = deque_create(int);
+ * 
+ * Usage (as parameter):
+ *   void process_stack(deque(int) *const dq) { ... }
+ * 
+ * Notes:
+ *   - This macro expands to the underlying deque struct type (type##_deque_s).
+ */
+#define deque(type) \
+   type##_deque_s
+
+
+/**
+ * typecheck_dequek_ptr macro
+ * ---------------------------
+ * Compile-time validation that 'var' is a pointer to a deque of 'type'.
+ *
+ * Usage:
+ *   typecheck_dequek_ptr(var, type, expr);
+ *
+ * Ensures that 'var' is either a pointer to 'type##_sdeque_s' or
+ * 'const type##_sdeque_s'. Useful for generic deque macros to produce
+ * clear compile-time errors if a non-deque pointer is passed.
+ *
+ * Behavior:
+ *   - C11+: uses typecheck_ptr with _Generic for compile-time checking.
+ *   - C99 fallback: simply evaluates 'expr' (no type enforcement).
+ */
+#define typecheck_deque_ptr(var, type, expr) \
+   typecheck_ptr(var, type##_deque_s, expr)
+
+
+/**
+ * Deque Expression Macros
+ * -----------------------
+ * Provide direct access to deque properties or simple computed expressions
+ * without calling a function. These macros are type-checked at compile-time
+ * (C11+) and perform a runtime NULL check (via assert) for safety.
+ *
+ * Each macro accepts:
+ *   - type  : The element type stored in the deque.
+ *   - deque : Pointer to the deque instance.
+ *
+ * Notes:
+ *   - These macros expand to expressions, not function calls.
+ *   - They can be safely used in conditions, assignments, and other expressions.
+ *   - Runtime checks are included for non-NULL deque pointers.
+ *   - Type safety is enforced at compile time in C11 and later.
+ *
+ * Example:
+ *   deque(int) s;
+ *   deque_init(int, &s);
+ *   if (!deque_full(int, &s))
+ *       deque_insert_back(int, &s, 42);
+ *   int len = deque_len(int, &s);
+ *   deque_clear(int, &s);
+ */
+#define deque_len(type, deque) \
+   typecheck_deque_ptr(deque, type, \
+      deque->len \
+   )
+
+#define deque_size(type, deque) \
+   typecheck_deque_ptr(deque, type, \
+      deque->size \
+   )
+
+#define deque_full(type, deque) \
+   typecheck_deque_ptr(deque, type, \
+      deque->len == deque->size \
+   )
+
+#define deque_empty(type, deque) \
+   typecheck_deque_ptr(deque, type, \
+      deque->len == 0 \
+   )
+
+#define deque_clear(type, deque) \
+   typecheck_deque_ptr(deque, type, \
+      deque->len = 0 \
+   )
 
 
 /**
@@ -148,17 +243,11 @@ bool type##_deque_resize(type##_deque_s *const restrict deque) \
    return true; \
 } \
 \
-void type##_deque_clear(type##_deque_s *const restrict deque) \
-{ \
-   assert(deque); \
-   deque->len = 0; \
-   deque->front = 0; \
-} \
-\
 void type##_deque_delete(type##_deque_s *const restrict deque) \
 { \
    assert(deque); \
-   type##_deque_clear(deque); \
+   deque_clear(type, deque); \
+   deque->front = 0; \
    if (deque->values != deque->inline_buffer) \
    { \
       free_fn(deque->values); \
@@ -171,7 +260,7 @@ bool type##_deque_insert_front(type##_deque_s *const restrict deque, const type 
 { \
    assert(deque); \
    assert(validate_value_fn(value)); \
-   if (type##_deque_full(deque) && !type##_deque_resize(deque)) \
+   if (deque_full(type, deque) && !type##_deque_resize(deque)) \
       return false; \
    deque->len++; \
    /* deque->front = (deque->front + deque->size - 1) % deque->size; */ \
@@ -184,7 +273,7 @@ bool type##_deque_insert_back(type##_deque_s *const restrict deque, const type v
 { \
    assert(deque); \
    assert(validate_value_fn(value)); \
-   if (type##_deque_full(deque) && !type##_deque_resize(deque)) \
+   if (deque_full(type, deque) && !type##_deque_resize(deque)) \
       return false; \
    /* deque->values[(deque->front + deque->len) % deque->size] = value; */ \
    deque->values[(deque->front + deque->len) & (deque->size - 1)] = value; \
@@ -195,7 +284,7 @@ bool type##_deque_insert_back(type##_deque_s *const restrict deque, const type v
 bool type##_deque_remove_front(type##_deque_s *const restrict deque) \
 { \
    assert(deque); \
-   if (type##_deque_empty(deque)) \
+   if (deque_empty(type, deque)) \
       return false; \
    /* deque->front = (deque->front + 1) % deque->size; */ \
    deque->front = (deque->front + 1) & (deque->size - 1); \
@@ -206,67 +295,12 @@ bool type##_deque_remove_front(type##_deque_s *const restrict deque) \
 bool type##_deque_remove_back(type##_deque_s *const restrict deque) \
 { \
    assert(deque); \
-   if (type##_deque_empty(deque)) \
+   if (deque_empty(type, deque)) \
       return false; \
    deque->len--; \
    return true; \
-} \
-\
-type type##_deque_peek_front(const type##_deque_s *const restrict deque) \
-{ \
-   assert(deque); \
-   assert(!type##_deque_empty(deque)); \
-   return deque->values[deque->front]; \
-} \
-\
-type type##_deque_peek_back(const type##_deque_s *const restrict deque) \
-{ \
-   assert(deque); \
-   assert(!type##_deque_empty(deque)); \
-   /* return deque->values[(deque->front + deque->len - 1) % deque->size]; */ \
-   return deque->values[(deque->front + deque->len - 1) & (deque->size - 1)]; \
 }
 
-
-/**
- * deque(type) macro
- * -----------------
- * Declares a deque variable of the given type.
- * 
- * Parameters:
- *   type - The element type stored in the deque.
- * 
- * Usage (as variable):
- *   deque(int) dq = deque_create(int);
- * 
- * Usage (as parameter):
- *   void process_stack(deque(int) *const dq) { ... }
- * 
- * Notes:
- *   - This macro expands to the underlying deque struct type (type##_deque_s).
- */
-#define deque(type) \
-   type##_deque_s
-
-
-/**
- * typecheck_dequek_ptr macro
- * ---------------------------
- * Compile-time validation that 'var' is a pointer to a deque of 'type'.
- *
- * Usage:
- *   typecheck_dequek_ptr(var, type, expr);
- *
- * Ensures that 'var' is either a pointer to 'type##_sdeque_s' or
- * 'const type##_sdeque_s'. Useful for generic deque macros to produce
- * clear compile-time errors if a non-deque pointer is passed.
- *
- * Behavior:
- *   - C11+: uses typecheck_ptr with _Generic for compile-time checking.
- *   - C99 fallback: simply evaluates 'expr' (no type enforcement).
- */
-#define typecheck_deque_ptr(var, type, expr) \
-   typecheck_ptr(var, type##_deque_s, expr)
 
 
 /**
@@ -290,29 +324,24 @@ type type##_deque_peek_back(const type##_deque_s *const restrict deque) \
       type##_deque_init((deque)) \
    )
 
+#define deque_peek_front(type, deque) \
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_peek_front((deque)) \
+   )
+
+#define deque_peek_back(type, deque) \
+   typecheck_deque_ptr(deque, type, \
+      type##_deque_peek_back((deque)) \
+   )
+
 #define deque_resize(type, deque) \
    typecheck_deque_ptr(deque, type, \
       type##_deque_resize((deque)) \
    )
 
-#define deque_clear(type, deque) \
-   typecheck_deque_ptr(deque, type, \
-      type##_deque_clear((deque)) \
-   )
-
 #define deque_delete(type, deque) \
    typecheck_deque_ptr(deque, type, \
       type##_deque_delete((deque)) \
-   )
-
-#define deque_empty(type, deque) \
-   typecheck_deque_ptr(deque, type, \
-      type##_deque_empty((deque)) \
-   )
-
-#define deque_full(type, deque) \
-   typecheck_deque_ptr(deque, type, \
-      type##_deque_full((deque)) \
    )
 
 #define deque_insert_front(type, deque, value) \
@@ -333,16 +362,6 @@ type type##_deque_peek_back(const type##_deque_s *const restrict deque) \
 #define deque_remove_back(type, deque) \
    typecheck_deque_ptr(deque, type, \
       type##_deque_remove_back((deque)) \
-   )
-
-#define deque_peek_front(type, deque) \
-   typecheck_deque_ptr(deque, type, \
-      type##_deque_peek_front((deque)) \
-   )
-
-#define deque_peek_back(type, deque) \
-   typecheck_deque_ptr(deque, type, \
-      type##_deque_peek_back((deque)) \
    )
 
 
