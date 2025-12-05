@@ -186,7 +186,28 @@ static void test_float_queue_clear(void **state)
    assert_true(result);
 }
 
+static void test_float_queue_reverse(void **state)
+{ 
+   queue(float) *queue = &((test_state_s*)(*state))->float_queue;
 
+   // inline buffer
+   for (size_t i = 0; i < queue->size; i++)
+      queue_enque(float, queue, mock_floats[i]);
+
+   queue_reverse(float, queue);
+   for (size_t i = 0; i < queue->size; i++)
+      assert_float_equal(queue->values[(queue->front + i) % queue->size], mock_floats[queue->len - 1 - i], FLOAT_EPS);
+
+   // heap
+   queue_clear(float, queue);
+   for (size_t i = 0; i < ARRAY_LEN(mock_floats); i++)
+      queue_enque(float, queue, mock_floats[i]);
+
+   queue_reverse(float, queue);
+   for (size_t i = 0; i < queue->len; i++)
+      assert_float_equal(queue->values[(queue->front + i) % queue->size], mock_floats[queue->len - 1 - i], FLOAT_EPS);
+}
+ 
 /* Car queue */
 
 // make sure no. elements > CAR_QUEUE_INIT_SIZE
@@ -358,6 +379,28 @@ static void test_car_queue_clear(void **state)
    assert_true(result);
 }
 
+static void test_car_queue_reverse(void **state)
+{ 
+   queue(car_s) *queue = &((test_state_s*)(*state))->car_queue;
+
+   // inline buffer
+   for (size_t i = 0; i < queue->size; i++)
+      queue_enque(car_s, queue, mock_cars[i]);
+
+   queue_reverse(car_s, queue);
+   for (size_t i = 0; i < queue->size; i++)
+      assert_memory_equal(&queue->values[(queue->front + i) % queue->size], &mock_cars[queue->len - 1 - i], sizeof(car_s));
+
+   // heap
+   queue_clear(car_s, queue);
+   for (size_t i = 0; i < ARRAY_LEN(mock_cars); i++)
+      queue_enque(car_s, queue, mock_cars[i]);
+
+   queue_reverse(car_s, queue);
+   for (size_t i = 0; i < queue->len; i++)
+      assert_memory_equal(&queue->values[(queue->front + i) % queue->size], &mock_cars[queue->len - 1 - i], sizeof(car_s));
+}
+
 int main(void)
 {  
    const struct CMUnitTest tests[] = 
@@ -369,6 +412,7 @@ int main(void)
       cmocka_unit_test_setup_teardown(test_float_queue_empty, setup, teardown),
       cmocka_unit_test_setup_teardown(test_float_queue_full, setup, teardown),
       cmocka_unit_test_setup_teardown(test_float_queue_clear, setup, teardown),
+      cmocka_unit_test_setup_teardown(test_float_queue_reverse, setup, teardown),
       cmocka_unit_test(test_car_queue_init_delete),
       cmocka_unit_test(test_car_queue_resize),
       cmocka_unit_test_setup_teardown(test_car_queue_peek, setup, teardown),
@@ -376,6 +420,7 @@ int main(void)
       cmocka_unit_test_setup_teardown(test_car_queue_empty, setup, teardown),
       cmocka_unit_test_setup_teardown(test_car_queue_full, setup, teardown),
       cmocka_unit_test_setup_teardown(test_car_queue_clear, setup, teardown),
+      cmocka_unit_test_setup_teardown(test_car_queue_reverse, setup, teardown),
    };
    return cmocka_run_group_tests(tests, NULL, NULL);
 }
