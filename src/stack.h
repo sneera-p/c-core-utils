@@ -113,22 +113,6 @@ void type##_stack_reverse(type##_stack_s *const restrict);
  *   - type  : The element type stored in the stack.
  *   - stack : Pointer to the stack instance.
  *
- * Available macros:
- *   stack_len(type, stack)
- *     - Returns the number of elements currently in the stack.
- *
- *   stack_size(type, stack)
- *     - Returns the total capacity of the stack (inline + heap if resized).
- *
- *   stack_full(type, stack)
- *     - Returns true if the stack is at capacity.
- *
- *   stack_empty(type, stack)
- *     - Returns true if the stack has no elements.
- *
- *   stack_clear(type, stack)
- *     - Resets the stack length to zero (does NOT free memory).
- *
  * Notes:
  *   - These macros expand to expressions, not function calls.
  *   - They can be safely used in conditions, assignments, and other expressions.
@@ -143,7 +127,6 @@ void type##_stack_reverse(type##_stack_s *const restrict);
  *   int len = stack_len(int, &s);
  *   stack_clear(int, &s);
  */
-
 #define stack_len(type, stack) \
    typecheck_stack_ptr(stack, type, \
       stack->len \
