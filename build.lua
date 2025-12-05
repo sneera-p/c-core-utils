@@ -1,4 +1,4 @@
-local fs = require "lfs"
+local lfs = require "lfs"
 
 local local_include_pattern = '#include%s+"(.-%.h)"'
 local system_include_pattern = '^#include%s+<(.-%.h)>'
