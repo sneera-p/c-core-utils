@@ -1,0 +1,38 @@
+name: Ccoutils Continuous Amalaganation
+
+on:
+   pull_request:
+      branches: [ main ]
+
+jobs:
+   test:
+      runs-on: ubuntu-slim
+      steps:
+         - uses: actions/checkout@v4
+         - name: Install dependancies (gcc, cmocka, lua)
+            run: |
+               apk update --no-cache
+               apk add --no-cache \
+                  gcc \
+                  musl-dev \
+                  cmocka-dev \
+                  lua \
+                  lua-dev \
+                  lua-filesystem \
+                  pkgconfig
+         - name: Verify installations
+            run: |
+               gcc --version
+               pkg-config --modversion cmocka || echo "cmocka pkg-config not found"
+               lua -v
+               lua -l lfs -e "print(lfs._VERSION)"
+         - name: Build amalganated header
+            run: |
+               mkdir -p ./build
+               lua build.lua
+         - name: Test macros
+            if: ${{ exists('./build/ccoutils.h') }}
+            run: |
+               lua test.lua './test/stack'
+               lua test.lua './test/queue'
+               lua test.lua './test/deque'
