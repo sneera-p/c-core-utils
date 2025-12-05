@@ -240,6 +240,7 @@ void type##_queue_delete(type##_queue_s *const restrict queue) \
 { \
    assert(queue); \
    queue_clear(type, queue); \
+   queue->front = 0; \
    if (queue->values != queue->inline_buffer) \
    { \
       free_fn(queue->values); \
