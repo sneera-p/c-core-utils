@@ -10,7 +10,7 @@ jobs:
       steps:
          - uses: actions/checkout@v4
          - name: Install dependancies (gcc, cmocka, lua)
-            run: |
+           run: |
                sudo apt-get update
                sudo apt-get install -y \
                   gcc \
@@ -21,18 +21,18 @@ jobs:
                   lua-filesystem \
                   pkg-config
          - name: Verify installations
-            run: |
+           run: |
                gcc --version
                pkg-config --modversion cmocka || echo "cmocka pkg-config not found"
                lua -v
                lua -l lfs -e "print(lfs._VERSION)"
          - name: Build amalganated header
-            run: |
+           run: |
                mkdir -p ./build
                lua build.lua
          - name: Test macros
-            if: ${{ exists('./build/ccoutils.h') }}
-            run: |
+           if: ${{ exists('./build/ccoutils.h') }}
+           run: |
                lua test.lua './test/stack'
                lua test.lua './test/queue'
                lua test.lua './test/deque'
