@@ -31,8 +31,12 @@ jobs:
                mkdir -p ./build
                lua build.lua
          - name: Test macros
-           if: ${{ exists('./build/ccoutils.h') }}
            run: |
+               FILE='./build/ccoutils.h'
+               if [ ! -f "$FILE" ]; then
+                  echo "Error: ./build/ccoutils.h not found"
+                  exit 1
+               fi
                lua test.lua './test/stack'
                lua test.lua './test/queue'
                lua test.lua './test/deque'
