@@ -48,23 +48,113 @@ static inline void type##_queue_init(type##_queue_s *const restrict queue) \
    queue->len = 0; \
    queue->size = init_size; \
 } \
-static inline bool type##_queue_empty(const type##_queue_s *const restrict queue) \
+\
+static inline type type##_queue_peek(const type##_queue_s *const restrict queue) \
 { \
    assert(queue); \
-   return queue->len == 0; \
+   assert(!queue_empty(type, queue)); \
+   return queue->values[queue->front]; \
 } \
-static inline bool type##_queue_full(const type##_queue_s *const restrict queue) \
-{ \
-   assert(queue); \
-   return queue->len == queue->size; \
-} \
+\
 bool type##_queue_resize(type##_queue_s *const restrict); \
-void type##_queue_clear(type##_queue_s *const restrict); \
 void type##_queue_delete(type##_queue_s *const restrict); \
 bool type##_queue_enque(type##_queue_s *const restrict, const type); \
 bool type##_queue_deque(type##_queue_s *const restrict); \
-type type##_queue_peek(const type##_queue_s *const restrict); \
 void type##_queue_reverse(type##_queue_s *const restrict);
+
+
+/**
+ * queue(type) macro
+ * -----------------
+ * Declares a queue variable of the given type.
+ * 
+ * Parameters:
+ *   type - The element type stored in the queue.
+ * 
+ * Usage (as variable):
+ *   queue(int) dq = queue_create(int);
+ * 
+ * Usage (as parameter):
+ *   void process_queue(queue(int) *const dq) { ... }
+ * 
+ * Notes:
+ *   - This macro expands to the underlying queue struct type (type##_queue_s).
+ */
+#define queue(type) \
+   type##_queue_s
+
+
+/**
+ * typecheck_queue_ptr macro
+ * --------------------------
+ * Compile-time validation that 'var' is a pointer to a queue of 'type'.
+ *
+ * Usage:
+ *   typecheck_queue_ptr(var, type, expr);
+ *
+ * Purpose:
+ *   Ensures that 'var' is either a pointer to 'type##_queue_s' or
+ *   'const type##_queue_s'. Useful for generic queue macros like
+ *   queue_peek() or queue_deque() to produce clear compile-time errors
+ *   if a non-queue pointer is passed.
+ *
+ * Behavior:
+ *   - C11+: uses typecheck_ptr with _Generic for compile-time checking.
+ *   - C99 fallback: simply evaluates 'expr' (no type enforcement).
+ */
+#define typecheck_queue_ptr(var, type, expr) \
+   typecheck_ptr(var, type##_queue_s, expr)
+
+
+/**
+ * Queue Expression Macros
+ * -----------------------
+ * Provide direct access to queue properties or simple computed expressions
+ * without calling a function. These macros are type-checked at compile-time
+ * (C11+) and perform a runtime NULL check (via assert) for safety.
+ *
+ * Each macro accepts:
+ *   - type  : The element type stored in the queue.
+ *   - queue : Pointer to the queue instance.
+ *
+ * Notes:
+ *   - These macros expand to expressions, not function calls.
+ *   - They can be safely used in conditions, assignments, and other expressions.
+ *   - Runtime checks are included for non-NULL queue pointers.
+ *   - Type safety is enforced at compile time in C11 and later.
+ *
+ * Example:
+ *   queue(int) s;
+ *   queue_init(int, &s);
+ *   if (!queue_full(int, &s))
+ *       queue_enque(int, &s, 42);
+ *   int len = queue_len(int, &s);
+ *   queue_clear(int, &s);
+ */
+#define queue_len(type, queue) \
+   typecheck_queue_ptr(queue, type, \
+      queue->len \
+   )
+
+#define queue_size(type, queue) \
+   typecheck_queue_ptr(queue, type, \
+      queue->size \
+   )
+
+#define queue_full(type, queue) \
+   typecheck_queue_ptr(queue, type, \
+      queue->len == queue->size \
+   )
+
+#define queue_empty(type, queue) \
+   typecheck_queue_ptr(queue, type, \
+      queue->len == 0 \
+   )
+
+#define queue_clear(type, queue) \
+   typecheck_queue_ptr(queue, type, \
+      queue->len = 0 \
+   )
 
 
 /**
@@ -146,17 +236,10 @@ bool type##_queue_resize(type##_queue_s *const restrict queue) \
    return true; \
 } \
 \
-void type##_queue_clear(type##_queue_s *const restrict queue) \
-{ \
-   assert(queue); \
-   queue->len = 0; \
-   queue->front = 0; \
-} \
-\
 void type##_queue_delete(type##_queue_s *const restrict queue) \
 { \
    assert(queue); \
-   type##_queue_clear(queue); \
+   queue_clear(type, queue); \
    if (queue->values != queue->inline_buffer) \
    { \
       free_fn(queue->values); \
@@ -169,7 +252,7 @@ bool type##_queue_enque(type##_queue_s *const restrict queue, const type value) 
 { \
    assert(queue); \
    assert(validate_value_fn(value)); \
-   if (type##_queue_full(queue) && !type##_queue_resize(queue)) \
+   if (queue_full(type, queue) && !type##_queue_resize(queue)) \
       return false; \
    /* queue->values[(queue->front + queue->len) % queue->size] = value; */ \
    queue->values[(queue->front + queue->len) & (queue->size - 1)] = value; \
@@ -180,19 +263,12 @@ bool type##_queue_enque(type##_queue_s *const restrict queue, const type value) 
 bool type##_queue_deque(type##_queue_s *const restrict queue) \
 { \
    assert(queue); \
-   if (type##_queue_empty(queue)) \
+   if (queue_empty(type, queue)) \
       return false; \
    /* queue->front = (queue->front + 1) % queue->size; */ \
    queue->front = (queue->front + 1) & (queue->size - 1); \
    queue->len--; \
    return true; \
-} \
-\
-type type##_queue_peek(const type##_queue_s *const restrict queue) \
-{ \
-   assert(queue); \
-   assert(!type##_queue_empty(queue)); \
-   return queue->values[queue->front]; \
 } \
 \
 void type##_queue_reverse(type##_queue_s *const restrict queue) \
@@ -208,49 +284,6 @@ void type##_queue_reverse(type##_queue_s *const restrict queue) \
       /* SWAP(type, queue->values[(front + i) % queue->size], queue->values[(tail - i) % queue->size]); */ \
       SWAP(type, queue->values[(front + i) & mask], queue->values[(tail - i) & mask]); \
 }
-
-
-/**
- * queue(type) macro
- * -----------------
- * Declares a queue variable of the given type.
- * 
- * Parameters:
- *   type - The element type stored in the queue.
- * 
- * Usage (as variable):
- *   queue(int) dq = queue_create(int);
- * 
- * Usage (as parameter):
- *   void process_queue(queue(int) *const dq) { ... }
- * 
- * Notes:
- *   - This macro expands to the underlying queue struct type (type##_queue_s).
- */
-#define queue(type) \
-   type##_queue_s
-
-
-/**
- * typecheck_queue_ptr macro
- * --------------------------
- * Compile-time validation that 'var' is a pointer to a queue of 'type'.
- *
- * Usage:
- *   typecheck_queue_ptr(var, type, expr);
- *
- * Purpose:
- *   Ensures that 'var' is either a pointer to 'type##_queue_s' or
- *   'const type##_queue_s'. Useful for generic queue macros like
- *   queue_peek() or queue_deque() to produce clear compile-time errors
- *   if a non-queue pointer is passed.
- *
- * Behavior:
- *   - C11+: uses typecheck_ptr with _Generic for compile-time checking.
- *   - C99 fallback: simply evaluates 'expr' (no type enforcement).
- */
-#define typecheck_queue_ptr(var, type, expr) \
-   typecheck_ptr(var, type##_queue_s, expr)
 
 
 /**
@@ -274,29 +307,19 @@ void type##_queue_reverse(type##_queue_s *const restrict queue) \
       type##_queue_init((queue)) \
    )
 
+#define queue_peek(type, queue) \
+   typecheck_queue_ptr(queue, type, \
+      type##_queue_peek((queue)) \
+   )
+
 #define queue_resize(type, queue) \
    typecheck_queue_ptr(queue, type, \
       type##_queue_resize((queue)) \
    )
 
-#define queue_clear(type, queue) \
-   typecheck_queue_ptr(queue, type, \
-      type##_queue_clear((queue)) \
-   )
-
 #define queue_delete(type, queue) \
    typecheck_queue_ptr(queue, type, \
       type##_queue_delete((queue)) \
-   )
-
-#define queue_empty(type, queue) \
-   typecheck_queue_ptr(queue, type, \
-      type##_queue_empty((queue)) \
-   )
-
-#define queue_full(type, queue) \
-   typecheck_queue_ptr(queue, type, \
-      type##_queue_full((queue)) \
    )
 
 #define queue_enque(type, queue, value) \
@@ -307,11 +330,6 @@ void type##_queue_reverse(type##_queue_s *const restrict queue) \
 #define queue_deque(type, queue) \
    typecheck_queue_ptr(queue, type, \
       type##_queue_deque((queue)) \
-   )
-
-#define queue_peek(type, queue) \
-   typecheck_queue_ptr(queue, type, \
-      type##_queue_peek((queue)) \
    )
 
 #define queue_reverse(type, queue) \
