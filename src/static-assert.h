@@ -1,6 +1,8 @@
 #ifndef __STATIC_ASSERT_H
 #define __STATIC_ASSERT_H
 
+#include <assert.h>
+
 
 /**
  * static_assert macro
@@ -134,41 +136,40 @@
 /**
  * typecheck_ptr macro
  * --------------------
- * Compile-time validation that a variable is a pointer to a specific type.
+ * Compile-time type validation for pointer variables, with an optional
+ * runtime NULL check (in debug builds via assert).
  *
  * Usage:
  *   typecheck_ptr(var, type, expr);
  *
  * Purpose:
- *   Ensures that the variable 'var' is either a pointer to 'type' or a
- *   pointer to 'const type'. This is useful for macros that expect
- *   a pointer to a specific type (e.g., queue, stack, or other generic
- *   containers) and want to produce a clear compile-time error if misused.
+ *   Ensures that the variable 'var' is either 
+ *      - pointer to 'type'
+ *      - pointer to 'const type'. 
+ *   This is useful for macros and functions that expect a pointer to a 
+ *   specific type (e.g., queue, stack, or other generic containers), 
+ *   providing a clear compile-time error if misused.
  *
  * Behavior:
  *   - C11 and later:
  *       Uses the _Generic keyword to check the type of 'var'. If 'var' is
- *       not a pointer to 'type' or 'const type', compilation fails with a
- *       "Pointer type mismatch" error.
+ *       not a pointer to 'type' or 'const type', compilation fails.
+ *       The macro also performs a runtime NULL check with assert(var).
  *
  *   - C99 fallback:
- *       No compile-time check is performed; the macro simply evaluates
- *       'expr'. This ensures backward compatibility at the cost of
- *       type safety.
- *
- * Example:
- *   queue(float) q;
- *   float f = queue_peek(float, &q); // compile-time type check ensures &q is queue(float)*
+ *       No compile-time check is performed. The macro simply asserts that
+ *       'var' is non-NULL (debug builds) and evaluates 'expr'. This
+ *       maintains backward compatibility at the cost of type safety.
  *
  * Limitations:
- *   - The C99 fallback cannot enforce type correctness.
- *   - Only validates pointer types; non-pointer variables will fail
- *     the check in C11, but pass silently in C99.
- *   - Does not distinguish between different pointer categories beyond const-qualification.
+ *   - Only pointer types are validated. Non-pointer variables may fail
+ *     compilation in C11, but will silently pass in C99.
+ *   - Only checks for exact type or const-qualified type.
+ *   - C99 fallback does not provide compile-time type checking.
  *
  * Portability:
- *   Works on all C11-compliant compilers. On C99 compilers, type checking
- *   is disabled to maintain compatibility.
+ *   Works on all C11-compliant compilers. On C99 compilers, only the
+ *   runtime NULL check is applied.
  */
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)  /* C11+ */
@@ -177,12 +178,16 @@
          type*: 1, \
          const type*: 1 \
       ), \
+      assert(var), \
       (expr))
 
-#else /* C99+ */
-   #define typecheck_ptr(var, type, expr) (expr)
+#else /* C99 fallback */
+   #define typecheck_ptr(var, type, expr) \
+      (assert(var), \
+      (expr))
 
 #endif
+
 
 
 #endif /* __STATIC_ASSERT_H */
